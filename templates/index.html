@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨 및 맛집 찾기</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"> <!-- 파비콘 링크 추가 -->
+    <link rel="stylesheet" href="/static/styles.css"> <!-- 필요에 따라 CSS 파일 추가 -->
+    <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=5pck85z8lr"></script>
+    <script src="/static/js/script.js" defer></script> <!-- JavaScript 파일 -->
+</head>
+<body>
+    <h1>Explore the Weather and Local Delicacies by Region</h1>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    <div id="weather-info"></div>
+    <label for="target_lang">Language:</label>
+    <select id="target_lang">
+        <option value="KO">Korean</option>
+        <option value="EN">English</option>
+        <option value="JA">Japanese</option> 
+        <option value="ZH">Chinese</option>  
+        <option value="RU">Russian</option>  
+    </select>
+</body>
+</html>
