@@ -43,7 +43,30 @@ function fetchWeather(lat, lon, targetLang) {
 
             // 맛집 정보를 표시
             if (data.places && data.places.length > 0) {
-                let placesList = "<h3>지역별 맛집</h3><ul>";
+                let placesHeader;
+
+                // 선택한 언어에 따라 맛집 제목 변경
+                switch (targetLang) {
+                    case 'KO':
+                        placesHeader = "지역별 맛집"; // 한국어
+                        break;
+                    case 'EN':
+                        placesHeader = "Delicious Restaurants"; // 영어
+                        break;
+                    case 'ZH':
+                        placesHeader = "美味的餐厅"; // 중국어
+                        break;
+                    case 'JA':
+                        placesHeader = "美味しいレストラン"; // 일본어
+                        break;
+                    case 'RU':
+                        placesHeader = "Вкусные рестораны"; // 러시아어
+                        break;
+                    default:
+                        placesHeader = "지역별 맛집"; // 기본값 (한국어)
+                }
+
+                let placesList = `<h3>${placesHeader}</h3><ul>`;
                 data.places.forEach(place => {
                     placesList += `<li><strong><a href="${place.link}" target="_blank">${place.name}</a></strong> - ${place.address}</li>`;
                 });
@@ -57,5 +80,6 @@ function fetchWeather(lat, lon, targetLang) {
             console.error('Error:', error);
         });
 }
+
 
 window.onload = initMap;
