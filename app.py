@@ -96,6 +96,7 @@ def search_places(location_name):
 def index():
     return render_template('index.html')
 
+# 날씨 설명 번역 사전 (한글 번역 전용)
 weather_translations = {
     "Clear": "맑음",
     "Partly Cloudy": "부분적으로 흐림",
@@ -126,8 +127,13 @@ def get_weather_and_places():
             temp = weather_data['current']['temp_c']  # 현재 온도 (섭씨)
             weather_desc = weather_data['current']['condition']['text']  # 날씨 설명
             
-            # 날씨 설명 한글 번역
-            translated_desc = weather_translations.get(weather_desc, weather_desc)
+            # 날씨 설명 처리
+            if target_lang == 'KO':
+                # 한국어일 경우 사전에서 번역
+                translated_desc = weather_translations.get(weather_desc, weather_desc)
+            else:
+                # 나머지 언어의 경우 번역기 API 사용
+                translated_desc = translate_text(weather_desc, target_lang)
 
             # 모든 출력값을 선택한 언어로 번역
             translated_location = translate_text(location_name, target_lang)
@@ -145,7 +151,7 @@ def get_weather_and_places():
                     'link': place['link']
                 })
 
-            # 사용자 언어에 맞게 최종 메시지 번역
+            # 사용자 언어에 맞게 최종 메시지 생성
             if target_lang == 'KO':
                 final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc}."
             elif target_lang == 'EN':
@@ -159,7 +165,6 @@ def get_weather_and_places():
             else:
                 # 기본 언어 설정 (예: 한국어)
                 final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc}."
-
 
             return jsonify({
                 'message': final_message,
