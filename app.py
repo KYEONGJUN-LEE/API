@@ -1,11 +1,10 @@
 from flask import Flask, request, jsonify, render_template
 import requests
-import json
 
 app = Flask(__name__)
 
-# Visual Crossing API (날씨 정보) 설정
-WEATHER_API_KEY = "TT2VK9WRWEVT4GZUG2ACRN6C3"
+# Weather API (날씨 정보) 설정
+WEATHER_API_KEY = "bf0cb088fcb7426d82d140951242310"
 
 # Naver Maps API 설정 (역 지오코딩용)
 NAVER_MAP_CLIENT_ID = '5pck85z8lr'
@@ -39,10 +38,9 @@ def translate_text(text, target_lang='EN'):
         print(f"Error in translation: {e}")
         return None
 
-# Visual Crossing API를 사용한 날씨 정보 가져오기 (위도, 경도 기준)
+# 주어진 위도와 경도를 기반으로 날씨 정보 가져오기
 def get_weather_by_coords(lat, lon):
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{lat},{lon}?key={WEATHER_API_KEY}&unitGroup=metric"
-    
+    url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={lat},{lon}&aqi=no"
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -98,6 +96,19 @@ def search_places(location_name):
 def index():
     return render_template('index.html')
 
+weather_translations = {
+    "Clear": "맑음",
+    "Partly Cloudy": "부분적으로 흐림",
+    "Overcast": "흐림",
+    "Rain": "비",
+    "Drizzle": "이슬비",
+    "Snow": "눈",
+    "Thunderstorm": "천둥번개",
+    "Mist": "안개",
+    "Fog": "안개",
+    "Haze": "안개낌"
+}
+
 # 위도와 경도를 이용해 날씨 정보 및 맛집 정보를 가져오는 엔드포인트
 @app.route('/get_weather_and_places', methods=['GET'])
 def get_weather_and_places():
@@ -111,12 +122,14 @@ def get_weather_and_places():
 
         # 날씨 데이터 가져오기
         weather_data = get_weather_by_coords(lat, lon)
-        if weather_data and 'days' in weather_data:
-            temp = weather_data['days'][0]['temp']
-            weather_desc = weather_data['days'][0]['description']
+        if weather_data and 'current' in weather_data:
+            temp = weather_data['current']['temp_c']  # 현재 온도 (섭씨)
+            weather_desc = weather_data['current']['condition']['text']  # 날씨 설명
+            
+            # 날씨 설명 한글 번역
+            translated_desc = weather_translations.get(weather_desc, weather_desc)
 
             # 모든 출력값을 선택한 언어로 번역
-            translated_desc = translate_text(weather_desc, target_lang)
             translated_location = translate_text(location_name, target_lang)
 
             # 맛집 정보 가져오기
@@ -134,24 +147,26 @@ def get_weather_and_places():
 
             # 사용자 언어에 맞게 최종 메시지 번역
             if target_lang == 'KO':
-                final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc if translated_desc else weather_desc}."
+                final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc}."
             elif target_lang == 'EN':
-                final_message = f"The current temperature in {translated_location} is {temp}°C, and the weather is {translated_desc if translated_desc else weather_desc}."
+                final_message = f"The current temperature in {translated_location} is {temp}°C, and the weather is {translated_desc}."
             elif target_lang == 'ZH':
-                final_message = f"{translated_location}的当前温度是{temp}°C，天气是{translated_desc if translated_desc else weather_desc}。"
+                final_message = f"{translated_location}的当前温度是{temp}°C，天气是{translated_desc}。"
             elif target_lang == 'JA':
-                final_message = f"{translated_location}の現在の気温は{temp}°Cで、天気は{translated_desc if translated_desc else weather_desc}です。"
+                final_message = f"{translated_location}の現在の気温は{temp}°Cで、天気は{translated_desc}です。"
             elif target_lang == 'RU':
-                final_message = f"Температура в {translated_location} сейчас {temp}°C, а погода {translated_desc if translated_desc else weather_desc}."
+                final_message = f"Температура в {translated_location} сейчас {temp}°C, а погода {translated_desc}."
             else:
                 # 기본 언어 설정 (예: 한국어)
-                final_message = f"{translated_location}의` 현재 온도는 {temp}°C이며, 날씨는 {translated_desc if translated_desc else weather_desc}."
+                final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc}."
+
 
             return jsonify({
                 'message': final_message,
                 'places': places_list
             })
         else:
+            print("날씨 정보를 가져오는 데 실패했습니다.")  # 오류 메시지 출력
             return jsonify({'message': "날씨 정보를 가져오는 데 실패했습니다."}), 400
     else:
         return jsonify({'message': "위치 정보가 없습니다."}), 400
