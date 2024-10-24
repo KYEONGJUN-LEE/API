@@ -99,15 +99,33 @@ def index():
 # 날씨 설명 번역 사전 (한글 번역 전용)
 weather_translations = {
     "Clear": "맑음",
+    "Sunny": "화창함",
+    "Mostly Sunny": "대체로 맑음",
     "Partly Cloudy": "부분적으로 흐림",
+    "Mostly Cloudy": "대체로 흐림",
+    "Cloudy": "흐림",
     "Overcast": "흐림",
+    "Light Rain": "약한 비",
     "Rain": "비",
+    "Heavy Rain": "폭우",
+    "Showers": "소나기",
     "Drizzle": "이슬비",
+    "Light Snow": "약한 눈",
     "Snow": "눈",
+    "Heavy Snow": "폭설",
+    "Sleet": "진눈깨비",
     "Thunderstorm": "천둥번개",
+    "Scattered Thunderstorms": "산발적인 천둥번개",
     "Mist": "안개",
     "Fog": "안개",
-    "Haze": "안개낌"
+    "Haze": "안개낌",
+    "Smoke": "연무",
+    "Dust": "먼지",
+    "Sand": "모래바람",
+    "Windy": "바람이 강함",
+    "Breezy": "산들바람",
+    "Blizzard": "눈보라",
+    "Tornado": "토네이도"
 }
 
 # 위도와 경도를 이용해 날씨 정보 및 맛집 정보를 가져오는 엔드포인트
