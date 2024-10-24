@@ -1,12 +1,17 @@
 let map;
 let marker; // 핀을 저장할 변수
+let currentLat, currentLon; // 현재 위도와 경도 저장 변수
 
+// 지도 초기화
 function initMap() {
-    // 지도 초기화 (서울 중심)
     map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(37.5665, 126.978), // 서울의 위도, 경도
         zoom: 10, // 확대 수준
     });
+
+    // 기본 언어 설정
+    const defaultLang = "KO";
+    updateLanguage(defaultLang);
 
     // 지도 클릭 이벤트 추가
     naver.maps.Event.addListener(map, 'click', function(e) {
@@ -20,6 +25,48 @@ function initMap() {
         // 좌표를 서버로 전송하여 날씨 정보 요청
         fetchWeather(lat, lon, targetLang);
     });
+
+    // 언어 선택 변경 시 날씨 및 맛집 정보를 다시 요청
+    document.getElementById("target_lang").addEventListener("change", function() {
+        const targetLang = this.value;
+        updateLanguage(targetLang); // 언어에 맞게 제목과 라벨 변경
+        if (currentLat && currentLon) {
+            // 저장된 좌표를 기반으로 새로운 언어로 날씨 및 맛집 정보 요청
+            fetchWeather(currentLat, currentLon, targetLang);
+        }
+    });
+}
+
+// 언어에 따라 제목과 라벨을 업데이트하는 함수
+function updateLanguage(targetLang) {
+    const h1 = document.querySelector('h1');
+    const langLabel = document.querySelector('label[for="target_lang"]');
+
+    switch (targetLang) {
+        case 'KO':
+            h1.innerText = "지역별 날씨와 맛집 탐색";
+            langLabel.innerText = "언어:";
+            break;
+        case 'EN':
+            h1.innerText = "Explore the Weather and Local Delicacies by Region";
+            langLabel.innerText = "Language:";
+            break;
+        case 'JA':
+            h1.innerText = "地域の天気と地元の料理を探る";
+            langLabel.innerText = "言語:";
+            break;
+        case 'ZH':
+            h1.innerText = "探索各地区的天气和地方美食";
+            langLabel.innerText = "语言:";
+            break;
+        case 'RU':
+            h1.innerText = "Изучите погоду и местные деликатесы по регионам";
+            langLabel.innerText = "Язык:";
+            break;
+        default:
+            h1.innerText = "Explore the Weather and Local Delicacies by Region";
+            langLabel.innerText = "Language:";
+    }
 }
 
 // 핀을 지도에 표시하는 함수
@@ -35,6 +82,10 @@ function placeMarker(latlng) {
 
 // 날씨 정보를 요청하는 함수
 function fetchWeather(lat, lon, targetLang) {
+    // 위도, 경도 저장
+    currentLat = lat;
+    currentLon = lon;
+
     fetch(`/get_weather_and_places?lat=${lat}&lon=${lon}&target_lang=${targetLang}`)
         .then(response => response.json())
         .then(data => {
@@ -48,22 +99,22 @@ function fetchWeather(lat, lon, targetLang) {
                 // 선택한 언어에 따라 맛집 제목 변경
                 switch (targetLang) {
                     case 'KO':
-                        placesHeader = "지역별 맛집"; // 한국어
+                        placesHeader = "지역별 맛집";
                         break;
                     case 'EN':
-                        placesHeader = "Delicious Restaurants"; // 영어
+                        placesHeader = "Delicious Restaurants";
                         break;
                     case 'ZH':
-                        placesHeader = "美味的餐厅"; // 중국어
+                        placesHeader = "美味的餐厅";
                         break;
                     case 'JA':
-                        placesHeader = "美味しいレストラン"; // 일본어
+                        placesHeader = "美味しいレストラン";
                         break;
                     case 'RU':
-                        placesHeader = "Вкусные рестораны"; // 러시아어
+                        placesHeader = "Вкусные рестораны";
                         break;
                     default:
-                        placesHeader = "지역별 맛집"; // 기본값 (한국어)
+                        placesHeader = "지역별 맛집";
                 }
 
                 let placesList = `<h3>${placesHeader}</h3><ul>`;
@@ -80,6 +131,5 @@ function fetchWeather(lat, lon, targetLang) {
             console.error('Error:', error);
         });
 }
-
 
 window.onload = initMap;
