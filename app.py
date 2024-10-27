@@ -143,7 +143,7 @@ def get_weather_and_places():
         weather_data = get_weather_by_coords(lat, lon)
         if weather_data and 'current' in weather_data:
             temp = weather_data['current']['temp_c']  # 현재 온도 (섭씨)
-            weather_desc = weather_data['current']['condition']['text']  # 날씨 설명
+            weather_desc = weather_data['current']['condition']['text'].lower()  # 날씨 설명을 소문자로 변환
             
             # 날씨 설명 처리
             if target_lang == 'KO':
