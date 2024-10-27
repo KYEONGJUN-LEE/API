@@ -1,5 +1,6 @@
 let map;
 let marker; // 핀을 저장할 변수
+let watchId; // 위치 추적 ID
 let currentLat, currentLon; // 현재 위도와 경도 저장 변수
 
 // 지도 초기화
@@ -12,6 +13,9 @@ function initMap() {
     // 기본 언어 설정
     const defaultLang = "KO";
     updateLanguage(defaultLang);
+
+    // 위치 추적 시작
+    startTracking();
 
     // 지도 클릭 이벤트 추가
     naver.maps.Event.addListener(map, 'click', function(e) {
@@ -35,6 +39,45 @@ function initMap() {
             fetchWeather(currentLat, currentLon, targetLang);
         }
     });
+}
+
+// 위치 추적 시작 함수
+function startTracking() {
+    if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // 지도에 실시간 위치 표시
+                const currentLocation = new naver.maps.LatLng(lat, lon);
+                map.setCenter(currentLocation);
+                placeMarker(currentLocation);
+
+                // 서버에 실시간 날씨 정보 요청
+                const targetLang = document.getElementById("target_lang").value;
+                fetchWeather(lat, lon, targetLang);
+            },
+            (error) => {
+                console.error("Error getting location: ", error);
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 10000,
+                timeout: 5000,
+            }
+        );
+    } else {
+        console.log("Geolocation is not supported by this browser.");
+    }
+}
+
+// 위치 추적 중지 함수
+function stopTracking() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
 }
 
 // 언어에 따라 제목과 라벨을 업데이트하는 함수
