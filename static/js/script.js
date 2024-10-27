@@ -14,9 +14,6 @@ function initMap() {
     const defaultLang = "KO";
     updateLanguage(defaultLang);
 
-    // 위치 추적 시작
-    startTracking();
-
     // 지도 클릭 이벤트 추가
     naver.maps.Event.addListener(map, 'click', function(e) {
         const lat = e.latlng.y; // 클릭한 위치의 위도
@@ -39,6 +36,16 @@ function initMap() {
             fetchWeather(currentLat, currentLon, targetLang);
         }
     });
+
+    // 사용자에게 위치 추적 여부 물어보기
+    askForLocation();
+}
+
+// 사용자에게 위치 사용 여부를 묻는 함수
+function askForLocation() {
+    if (confirm("현재 위치를 사용하시겠습니까?")) {
+        startTracking(); // 위치 확인 시작
+    }
 }
 
 // 위치 추적 시작 함수
@@ -86,30 +93,30 @@ function updateLanguage(targetLang) {
     const langLabel = document.querySelector('label[for="target_lang"]');
 
     switch (targetLang) {
-    case 'KO':
-        h1.innerText = "지역 기반 날씨 및 추천 서비스";
-        langLabel.innerText = "언어:";
-        break;
-    case 'EN':
-        h1.innerText = "Regional Weather and Recommendation Service";
-        langLabel.innerText = "Language:";
-        break;
-    case 'JA':
-        h1.innerText = "地域の天気とおすすめサービス";
-        langLabel.innerText = "言語:";
-        break;
-    case 'ZH':
-        h1.innerText = "地区天气与推荐服务";
-        langLabel.innerText = "语言:";
-        break;
-    case 'RU':
-        h1.innerText = "Региональная служба погоды и рекомендаций";
-        langLabel.innerText = "Язык:";
-        break;
-    default:
-        h1.innerText = "Regional Weather and Recommendation Service";
-        langLabel.innerText = "Language:";
-}
+        case 'KO':
+            h1.innerText = "지역 기반 날씨 및 추천 서비스";
+            langLabel.innerText = "언어:";
+            break;
+        case 'EN':
+            h1.innerText = "Regional Weather and Recommendation Service";
+            langLabel.innerText = "Language:";
+            break;
+        case 'JA':
+            h1.innerText = "地域の天気とおすすめサービス";
+            langLabel.innerText = "言語:";
+            break;
+        case 'ZH':
+            h1.innerText = "地区天气与推荐服务";
+            langLabel.innerText = "语言:";
+            break;
+        case 'RU':
+            h1.innerText = "Региональная служба погоды и рекомендаций";
+            langLabel.innerText = "Язык:";
+            break;
+        default:
+            h1.innerText = "Regional Weather and Recommendation Service";
+            langLabel.innerText = "Language:";
+    }
 }
 
 // 핀을 지도에 표시하는 함수
@@ -174,25 +181,25 @@ function fetchWeather(lat, lon, targetLang) {
                 let placesHeader;
 
                 // 선택한 언어에 따라 맛집 제목 변경
-            switch (targetLang) {
-                case 'KO':
-                    placesHeader = "근처 맛집"; // 한국어
-                    break;
-                case 'EN':
-                    placesHeader = "Nearby Restaurants"; // 영어
-                    break;
-                case 'ZH':
-                    placesHeader = "附近的餐厅"; // 중국어
-                    break;
-                case 'JA':
-                    placesHeader = "近くのレストラン"; // 일본어
-                    break;
-                case 'RU':
-                    placesHeader = "Ближайшие рестораны"; // 러시아어
-                    break;
-                default:
-                    placesHeader = "근처 맛집"; // 기본 한국어
-            }
+                switch (targetLang) {
+                    case 'KO':
+                        placesHeader = "근처 맛집"; // 한국어
+                        break;
+                    case 'EN':
+                        placesHeader = "Nearby Restaurants"; // 영어
+                        break;
+                    case 'ZH':
+                        placesHeader = "附近的餐厅"; // 중국어
+                        break;
+                    case 'JA':
+                        placesHeader = "近くのレストラン"; // 일본어
+                        break;
+                    case 'RU':
+                        placesHeader = "Ближайшие рестораны"; // 러시아어
+                        break;
+                    default:
+                        placesHeader = "근처 맛집"; // 기본 한국어
+                }
                 let placesList = `<h3>${placesHeader}</h3><ul>`;
                 data.places.forEach(place => {
                     placesList += `<li><strong><a href="${place.link}" target="_blank">${place.name}</a></strong> - ${place.address}</li>`;
