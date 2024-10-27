@@ -96,6 +96,25 @@ def search_places(location_name):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching places data: {e}")
         return []
+    
+# Naver Search API를 사용한 가볼만한 곳 검색
+def search_attractions(location_name):
+    query = f"{location_name} 가볼만한 곳"  # 지역명을 기반으로 검색
+    display_count = 5  # 가져올 명소 개수
+    url = f"https://openapi.naver.com/v1/search/local.json?query={query}&sort=random&display={display_count}"  # 랜덤 정렬 및 표시 개수 설정
+    headers = {
+        "X-Naver-Client-Id": NAVER_SEARCH_CLIENT_ID,
+        "X-Naver-Client-Secret": NAVER_SEARCH_CLIENT_SECRET,
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json().get('items', [])
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching places data: {e}")
+        return []
+
 
 # 메인 페이지
 @app.route('/')
@@ -134,7 +153,7 @@ weather_translations = {
     "tornado": "토네이도"
 }
 
-# 위도와 경도를 이용해 날씨 정보 및 맛집 정보를 가져오는 엔드포인트
+# 위도와 경도를 이용해 날씨 정보 및 맛집, 명소 정보를 가져오는 엔드포인트
 @app.route('/get_weather_and_places', methods=['GET'])
 def get_weather_and_places():
     lat = request.args.get('lat')
@@ -150,6 +169,7 @@ def get_weather_and_places():
         if weather_data and 'current' in weather_data:
             temp = weather_data['current']['temp_c']  # 현재 온도 (섭씨)
             weather_desc = weather_data['current']['condition']['text'].lower()  # 날씨 설명을 소문자로 변환
+            
             # 날씨 설명 처리
             if target_lang == 'KO':
                 # 한국어일 경우 사전에서 번역
@@ -174,6 +194,19 @@ def get_weather_and_places():
                     'link': place['link']
                 })
 
+            # 명소 정보 가져오기
+            attractions_data = search_attractions(location_name)
+
+            attractions_list = []
+            for attraction in attractions_data:
+                translated_name = translate_text(attraction['title'], target_lang)  # 명소 이름 번역
+                translated_address = translate_text(attraction['address'], target_lang)  # 명소 주소 번역
+                attractions_list.append({
+                    'name': translated_name,
+                    'address': translated_address,
+                    'link': attraction['link']
+                })
+
             # 사용자 언어에 맞게 최종 메시지 생성
             if target_lang == 'KO':
                 final_message = f"{translated_location}의 현재 온도는 {temp}°C이며, 날씨는 {translated_desc}."
@@ -191,7 +224,8 @@ def get_weather_and_places():
 
             return jsonify({
                 'message': final_message,
-                'places': places_list
+                'places': places_list,
+                'attractions': attractions_list  # 명소 정보를 추가
             })
         else:
             print("날씨 정보를 가져오는 데 실패했습니다.")  # 오류 메시지 출력
