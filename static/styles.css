@@ -34,7 +34,7 @@ h1 {
     image-rendering: -webkit-optimize-contrast; /* 고해상도 최적화 */
 }
 
-#weather-info {
+#weather-info-attractions-info {
     background: white;
     border-radius: 12px;
     padding: 20px;
