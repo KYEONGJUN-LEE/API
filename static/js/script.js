@@ -26,7 +26,7 @@ function initMap() {
         // 핀 찍기
         placeMarker(e.latlng);
 
-        // 좌표를 서버로 전송하여 날씨 정보 요청
+        // 좌표를 서버로 전송하여 날씨 및 맛집, 명소 정보 요청
         fetchWeather(lat, lon, targetLang);
     });
 
@@ -86,30 +86,30 @@ function updateLanguage(targetLang) {
     const langLabel = document.querySelector('label[for="target_lang"]');
 
     switch (targetLang) {
-        case 'KO':
-            h1.innerText = "지역별 날씨와 맛집 탐색";
-            langLabel.innerText = "언어:";
-            break;
-        case 'EN':
-            h1.innerText = "Explore the Weather and Local Delicacies by Region";
-            langLabel.innerText = "Language:";
-            break;
-        case 'JA':
-            h1.innerText = "地域の天気と地元の料理を探る";
-            langLabel.innerText = "言語:";
-            break;
-        case 'ZH':
-            h1.innerText = "探索各地区的天气和地方美食";
-            langLabel.innerText = "语言:";
-            break;
-        case 'RU':
-            h1.innerText = "Изучите погоду и местные деликатесы по регионам";
-            langLabel.innerText = "Язык:";
-            break;
-        default:
-            h1.innerText = "Explore the Weather and Local Delicacies by Region";
-            langLabel.innerText = "Language:";
-    }
+    case 'KO':
+        h1.innerText = "지역 기반 날씨 및 추천 서비스";
+        langLabel.innerText = "언어:";
+        break;
+    case 'EN':
+        h1.innerText = "Regional Weather and Recommendation Service";
+        langLabel.innerText = "Language:";
+        break;
+    case 'JA':
+        h1.innerText = "地域の天気とおすすめサービス";
+        langLabel.innerText = "言語:";
+        break;
+    case 'ZH':
+        h1.innerText = "地区天气与推荐服务";
+        langLabel.innerText = "语言:";
+        break;
+    case 'RU':
+        h1.innerText = "Региональная служба погоды и рекомендаций";
+        langLabel.innerText = "Язык:";
+        break;
+    default:
+        h1.innerText = "Regional Weather and Recommendation Service";
+        langLabel.innerText = "Language:";
+}
 }
 
 // 핀을 지도에 표시하는 함수
@@ -123,7 +123,6 @@ function placeMarker(latlng) {
     });
 }
 
-// 날씨 정보를 요청하는 함수
 function fetchWeather(lat, lon, targetLang) {
     // 위도, 경도 저장
     currentLat = lat;
@@ -132,34 +131,68 @@ function fetchWeather(lat, lon, targetLang) {
     fetch(`/get_weather_and_places?lat=${lat}&lon=${lon}&target_lang=${targetLang}`)
         .then(response => response.json())
         .then(data => {
-            // 날씨 정보를 지도 아래에 표시
+            // 날씨 정보를 먼저 표시
             document.getElementById('weather-info').innerText = data.message;
+
+            // 명소 정보를 표시
+            if (data.attractions && data.attractions.length > 0) {
+                let attractionsHeader;
+
+                // 선택한 언어에 따라 명소 제목 변경
+                switch (targetLang) {
+                    case 'KO':
+                        attractionsHeader = "가볼만한 곳";
+                        break;
+                    case 'EN':
+                        attractionsHeader = "Recommended Attractions";
+                        break;
+                    case 'ZH':
+                        attractionsHeader = "推荐景点";
+                        break;
+                    case 'JA':
+                        attractionsHeader = "おすすめの観光地";
+                        break;
+                    case 'RU':
+                        attractionsHeader = "Рекомендуемые достопримечательности";
+                        break;
+                    default:
+                        attractionsHeader = "가볼만한 곳";
+                }
+
+                let attractionsList = `<h3>${attractionsHeader}</h3><ul>`;
+                data.attractions.forEach(attraction => {
+                    attractionsList += `<li><strong><a href="${attraction.link}" target="_blank">${attraction.name}</a></strong> - ${attraction.address}</li>`;
+                });
+                attractionsList += "</ul>";
+                document.getElementById('weather-info').innerHTML += attractionsList; // 명소 정보 추가
+            } else {
+                document.getElementById('weather-info').innerText += "\n명소 정보를 가져오는 데 실패했습니다.";
+            }
 
             // 맛집 정보를 표시
             if (data.places && data.places.length > 0) {
                 let placesHeader;
 
                 // 선택한 언어에 따라 맛집 제목 변경
-                switch (targetLang) {
-                    case 'KO':
-                        placesHeader = "지역별 맛집";
-                        break;
-                    case 'EN':
-                        placesHeader = "Delicious Restaurants";
-                        break;
-                    case 'ZH':
-                        placesHeader = "美味的餐厅";
-                        break;
-                    case 'JA':
-                        placesHeader = "美味しいレストラン";
-                        break;
-                    case 'RU':
-                        placesHeader = "Вкусные рестораны";
-                        break;
-                    default:
-                        placesHeader = "지역별 맛집";
-                }
-
+            switch (targetLang) {
+                case 'KO':
+                    placesHeader = "근처 맛집"; // 한국어
+                    break;
+                case 'EN':
+                    placesHeader = "Nearby Restaurants"; // 영어
+                    break;
+                case 'ZH':
+                    placesHeader = "附近的餐厅"; // 중국어
+                    break;
+                case 'JA':
+                    placesHeader = "近くのレストラン"; // 일본어
+                    break;
+                case 'RU':
+                    placesHeader = "Ближайшие рестораны"; // 러시아어
+                    break;
+                default:
+                    placesHeader = "근처 맛집"; // 기본 한국어
+            }
                 let placesList = `<h3>${placesHeader}</h3><ul>`;
                 data.places.forEach(place => {
                     placesList += `<li><strong><a href="${place.link}" target="_blank">${place.name}</a></strong> - ${place.address}</li>`;
