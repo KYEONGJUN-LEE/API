@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>날씨 및 맛집 찾기</title>
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"> <!-- 파비콘 링크 추가 -->
+    <title>지역 기반 날씨 및 추천 서비스</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"> 
     <link rel="apple-touch-icon" href="/static/favicon.ico"> <!-- iOS 홈 화면 아이콘 추가 -->
-    <link rel="stylesheet" href="/static/styles.css"> <!-- 필요에 따라 CSS 파일 추가 -->
-    <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=5pck85z8lr"></script>
-    <script src="/static/js/script.js" defer></script> <!-- JavaScript 파일 -->
-</head>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=5pck85z8lr"></script> <!-- 네이버 지도 API -->
+    <script src="/static/js/script.js" defer></script>
 <body>
-    <h1>지역별 날씨와 맛집 탐색</h1>
+    <h1>지역 기반 날씨 및 추천 서비스</h1>
+    
     <div id="map-container">
         <div id="map"></div>
     </div>
-    <div id="weather-info"></div>
+
+    <div id="weather-info-attractions-info"> 
+        <div id="weather-info"></div>
+    </div> 
+
     <label for="target_lang">언어:</label>
     <select id="target_lang">
         <option value="KO">Korean</option>
