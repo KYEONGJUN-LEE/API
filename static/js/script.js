@@ -2,6 +2,7 @@ let map;
 let marker; // 핀을 저장할 변수
 let watchId; // 위치 추적 ID
 let currentLat, currentLon; // 현재 위도와 경도 저장 변수
+let isTracking = true; // 실시간 위치 추적 상태 변수
 
 // 지도 초기화
 function initMap() {
@@ -10,41 +11,40 @@ function initMap() {
         zoom: 10, // 확대 수준
     });
 
-    // 기본 언어 설정
     const defaultLang = "KO";
     updateLanguage(defaultLang);
 
     // 지도 클릭 이벤트 추가
     naver.maps.Event.addListener(map, 'click', function(e) {
-        const lat = e.latlng.y; // 클릭한 위치의 위도
-        const lon = e.latlng.x; // 클릭한 위치의 경도
-        const targetLang = document.getElementById("target_lang").value; // 선택된 언어 가져오기
+        const lat = e.latlng.y;
+        const lon = e.latlng.x;
+        const targetLang = document.getElementById("target_lang").value;
 
-        // 핀 찍기
+        // 실시간 위치 추적 중지
+        if (isTracking) {
+            stopTracking(); // 실시간 위치 추적 중지
+            isTracking = false; // 추적 상태 업데이트
+        }
+
         placeMarker(e.latlng);
-
-        // 좌표를 서버로 전송하여 날씨 및 맛집, 명소 정보 요청
         fetchWeather(lat, lon, targetLang);
     });
 
-    // 언어 선택 변경 시 날씨 및 맛집 정보를 다시 요청
     document.getElementById("target_lang").addEventListener("change", function() {
         const targetLang = this.value;
-        updateLanguage(targetLang); // 언어에 맞게 제목과 라벨 변경
+        updateLanguage(targetLang);
         if (currentLat && currentLon) {
-            // 저장된 좌표를 기반으로 새로운 언어로 날씨 및 맛집 정보 요청
             fetchWeather(currentLat, currentLon, targetLang);
         }
     });
 
-    // 사용자에게 위치 추적 여부 물어보기
     askForLocation();
 }
 
 // 사용자에게 위치 사용 여부를 묻는 함수
 function askForLocation() {
     if (confirm("현재 위치를 사용하시겠습니까?")) {
-        startTracking(); // 위치 확인 시작
+        startTracking();
     }
 }
 
@@ -53,15 +53,14 @@ function startTracking() {
     if (navigator.geolocation) {
         watchId = navigator.geolocation.watchPosition(
             (position) => {
+                if (!isTracking) return; // 위치 추적이 비활성화된 경우 중지
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
 
-                // 지도에 실시간 위치 표시
                 const currentLocation = new naver.maps.LatLng(lat, lon);
                 map.setCenter(currentLocation);
                 placeMarker(currentLocation);
 
-                // 서버에 실시간 날씨 정보 요청
                 const targetLang = document.getElementById("target_lang").value;
                 fetchWeather(lat, lon, targetLang);
             },
@@ -125,27 +124,22 @@ function placeMarker(latlng) {
         marker.setMap(null); // 기존 핀 제거
     }
     marker = new naver.maps.Marker({
-        position: latlng, // 클릭한 위치
-        map: map // 지도에 추가
+        position: latlng,
+        map: map,
     });
 }
 
 function fetchWeather(lat, lon, targetLang) {
-    // 위도, 경도 저장
     currentLat = lat;
     currentLon = lon;
 
     fetch(`/get_weather_and_places?lat=${lat}&lon=${lon}&target_lang=${targetLang}`)
         .then(response => response.json())
         .then(data => {
-            // 날씨 정보를 먼저 표시
             document.getElementById('weather-info').innerText = data.message;
 
-            // 명소 정보를 표시
             if (data.attractions && data.attractions.length > 0) {
                 let attractionsHeader;
-
-                // 선택한 언어에 따라 명소 제목 변경
                 switch (targetLang) {
                     case 'KO':
                         attractionsHeader = "가볼만한 곳";
@@ -171,41 +165,38 @@ function fetchWeather(lat, lon, targetLang) {
                     attractionsList += `<li><strong><a href="${attraction.link}" target="_blank">${attraction.name}</a></strong> - ${attraction.address}</li>`;
                 });
                 attractionsList += "</ul>";
-                document.getElementById('weather-info').innerHTML += attractionsList; // 명소 정보 추가
+                document.getElementById('weather-info').innerHTML += attractionsList;
             } else {
                 document.getElementById('weather-info').innerText += "\n명소 정보를 가져오는 데 실패했습니다.";
             }
 
-            // 맛집 정보를 표시
             if (data.places && data.places.length > 0) {
                 let placesHeader;
-
-                // 선택한 언어에 따라 맛집 제목 변경
                 switch (targetLang) {
                     case 'KO':
-                        placesHeader = "근처 맛집"; // 한국어
+                        placesHeader = "근처 맛집";
                         break;
                     case 'EN':
-                        placesHeader = "Nearby Restaurants"; // 영어
+                        placesHeader = "Nearby Restaurants";
                         break;
                     case 'ZH':
-                        placesHeader = "附近的餐厅"; // 중국어
+                        placesHeader = "附近的餐厅";
                         break;
                     case 'JA':
-                        placesHeader = "近くのレストラン"; // 일본어
+                        placesHeader = "近くのレストラン";
                         break;
                     case 'RU':
-                        placesHeader = "Ближайшие рестораны"; // 러시아어
+                        placesHeader = "Ближайшие рестораны";
                         break;
                     default:
-                        placesHeader = "근처 맛집"; // 기본 한국어
+                        placesHeader = "근처 맛집";
                 }
                 let placesList = `<h3>${placesHeader}</h3><ul>`;
                 data.places.forEach(place => {
                     placesList += `<li><strong><a href="${place.link}" target="_blank">${place.name}</a></strong> - ${place.address}</li>`;
                 });
                 placesList += "</ul>";
-                document.getElementById('weather-info').innerHTML += placesList; // 맛집 정보 추가
+                document.getElementById('weather-info').innerHTML += placesList;
             } else {
                 document.getElementById('weather-info').innerText += "\n맛집 정보를 가져오는 데 실패했습니다.";
             }
