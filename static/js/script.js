@@ -43,32 +43,39 @@ function initMap() {
 
 // 사용자에게 위치 사용 여부를 묻는 함수
 function askForLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+    // confirm으로 위치 사용 여부를 묻기
+    const useLocation = confirm("현재 위치를 사용하시겠습니까?");
+    
+    if (useLocation) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
 
-                // 지도에 초기 위치 표시
-                const initialLocation = new naver.maps.LatLng(lat, lon);
-                map.setCenter(initialLocation);
-                placeMarker(initialLocation);
+                    // 지도에 초기 위치 표시
+                    const initialLocation = new naver.maps.LatLng(lat, lon);
+                    map.setCenter(initialLocation);
+                    placeMarker(initialLocation);
 
-                // 초기 위치에 대한 날씨 정보 요청
-                const targetLang = document.getElementById("target_lang").value;
-                fetchWeather(lat, lon, targetLang);
-            },
-            (error) => {
-                console.error("Error getting location: ", error);
-            },
-            {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000,
-            }
-        );
+                    // 초기 위치에 대한 날씨 정보 요청
+                    const targetLang = document.getElementById("target_lang").value;
+                    fetchWeather(lat, lon, targetLang);
+                },
+                (error) => {
+                    console.error("Error getting location: ", error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000,
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+        }
     } else {
-        console.log("Geolocation is not supported by this browser.");
+        console.log("User chose not to use their location.");
     }
 }
 
