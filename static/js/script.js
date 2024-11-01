@@ -1,8 +1,7 @@
 let map;
-let marker; // 핀을 저장할 변수
-let watchId; // 위치 추적 ID
-let currentLat, currentLon; // 현재 위도와 경도 저장 변수
-let isTracking = true; // 실시간 위치 추적 상태 변수
+let marker;
+let currentLat, currentLon;
+let hasCheckedInitialLocation = false; // 처음에만 위치 확인을 위해 사용
 
 // 지도 초기화
 function initMap() {
@@ -20,13 +19,10 @@ function initMap() {
         const lon = e.latlng.x;
         const targetLang = document.getElementById("target_lang").value;
 
-        // 실시간 위치 추적 중지
-        if (isTracking) {
-            stopTracking(); // 실시간 위치 추적 중지
-            isTracking = false; // 추적 상태 업데이트
-        }
-
+        // 클릭한 위치에 핀 찍기
         placeMarker(e.latlng);
+
+        // 사용자가 클릭한 좌표로 날씨 및 맛집 정보 요청
         fetchWeather(lat, lon, targetLang);
     });
 
@@ -38,29 +34,27 @@ function initMap() {
         }
     });
 
-    askForLocation();
+    // 처음에만 실시간 위치 사용 여부를 묻고 위치 확인
+    if (!hasCheckedInitialLocation) {
+        askForLocation();
+        hasCheckedInitialLocation = true;
+    }
 }
 
 // 사용자에게 위치 사용 여부를 묻는 함수
 function askForLocation() {
-    if (confirm("현재 위치를 사용하시겠습니까?")) {
-        startTracking();
-    }
-}
-
-// 위치 추적 시작 함수
-function startTracking() {
     if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
+        navigator.geolocation.getCurrentPosition(
             (position) => {
-                if (!isTracking) return; // 위치 추적이 비활성화된 경우 중지
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
 
-                const currentLocation = new naver.maps.LatLng(lat, lon);
-                map.setCenter(currentLocation);
-                placeMarker(currentLocation);
+                // 지도에 초기 위치 표시
+                const initialLocation = new naver.maps.LatLng(lat, lon);
+                map.setCenter(initialLocation);
+                placeMarker(initialLocation);
 
+                // 초기 위치에 대한 날씨 정보 요청
                 const targetLang = document.getElementById("target_lang").value;
                 fetchWeather(lat, lon, targetLang);
             },
@@ -69,7 +63,7 @@ function startTracking() {
             },
             {
                 enableHighAccuracy: true,
-                maximumAge: 10000,
+                maximumAge: 0,
                 timeout: 5000,
             }
         );
@@ -78,12 +72,15 @@ function startTracking() {
     }
 }
 
-// 위치 추적 중지 함수
-function stopTracking() {
-    if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
+// 핀을 지도에 표시하는 함수
+function placeMarker(latlng) {
+    if (marker) {
+        marker.setMap(null);
     }
+    marker = new naver.maps.Marker({
+        position: latlng,
+        map: map
+    });
 }
 
 // 언어에 따라 제목과 라벨을 업데이트하는 함수
@@ -116,17 +113,6 @@ function updateLanguage(targetLang) {
             h1.innerText = "Regional Weather and Recommendation Service";
             langLabel.innerText = "Language:";
     }
-}
-
-// 핀을 지도에 표시하는 함수
-function placeMarker(latlng) {
-    if (marker) {
-        marker.setMap(null); // 기존 핀 제거
-    }
-    marker = new naver.maps.Marker({
-        position: latlng,
-        map: map,
-    });
 }
 
 function fetchWeather(lat, lon, targetLang) {
